@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#f5f0eb">
+    <title>Moments of</title>
+
+    <!-- Inline PWA Manifest -->
+    <script type="application/json" id="pwa-manifest">
+    {
+        "name": "Moments of",
+        "short_name": "Moments",
+        "description": "Poetic quotes for contemplation and reflection",
+        "theme_color": "#f5f0eb",
+        "background_color": "#f5f0eb",
+        "display": "standalone",
+        "start_url": "./",
+        "scope": "/",
+        "orientation": "portrait",
+        "icons": [
+            {
+                "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect fill='%23FFB3D9' width='192' height='192'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='120' fill='%23231F20' font-weight='bold'%3E🦩%3C/text%3E%3C/svg%3E",
+                "sizes": "192x192",
+                "type": "image/svg+xml",
+                "purpose": "any maskable"
+            },
+            {
+                "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect fill='%23FFB3D9' width='512' height='512'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='320' fill='%23231F20' font-weight='bold'%3E🦩%3C/text%3E%3C/svg%3E",
+                "sizes": "512x512",
+                "type": "image/svg+xml",
+                "purpose": "any maskable"
+            }
+        ],
+        "categories": ["sports", "entertainment"],
+        "lang": "en"
+    }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: Georgia, serif;
+            background: #f5f0eb;
+            color: #8B7355;
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .phone-container {
+            width: 100%;
+            height: 100vh;
+            background: #f5f0eb;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .screen {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 70px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .screen.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .screen.out {
+            transform: translateX(-100%);
+        }
+
+        .header {
+            background: linear-gradient(180deg, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.95) 100%);
+            padding: max(env(safe-area-inset-top), 16px) 20px 20px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 9999;
+            backdrop-filter: blur(20px);
+        }
+
+        .logo-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #FFB3D9 0%, #FFB3D9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .logo:active {
+            transform: scale(0.95);
+        }
+
+        .owner-badge {
+            background: linear-gradient(135deg, #FFB3D9 0%, #FFB3D9 100%);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+        }
+
+        .tagline {
+            font-size: 11px;
+            color: #FFB3D9;
+            font-weight: 500;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            text-align: center;
+            position: relative;
+            padding-left: 40px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .partner-bar {
+            background: rgba(255, 179, 217, 0.05);
+            border: 1px solid rgba(255, 179, 217, 0.15);
+            border-radius: 8px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-size: 7px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 0.5px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .partner-logo {
+            font-size: 12px;
+        }
+
+        .back-button {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 179, 217, 0.1);
+            border: 1px solid rgba(255, 179, 217, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+            font-size: 14px;
+            color: #FFB3D9;
+            z-index: 10000;
+            pointer-events: auto;
+        }
+
+        .back-button:active {
+            transform: translateY(-50%) scale(0.9);
+            background: rgba(255, 179, 217, 0.2);
+        }
+
+        .back-button.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .content {
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .welcome-section {
+            text-align: center;
+            padding: 20px 20px 0 20px;
+        }
+
+        .welcome-title {
+            font-size: 36px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #FFB3D9 0%, #fff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .welcome-subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 32px;
+            padding: 0 4px;
+        }
+
+        .feature-card {
+            background: rgba(255, 179, 217, 0.05);
+            border: 1px solid rgba(255, 179, 217, 0.15);
+            border-radius: 16px;
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .feature-card:active {
+            transform: scale(0.97);
+            border-color: #FFB3D9;
+            background: rgba(255, 179, 217, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .feature-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .feature-desc {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.4;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, rgba(255, 20, 147, 0.1) 0%, rgba(255, 105, 180, 0.05) 100%);
+            border: 1px solid rgba(255, 179, 217, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .cta-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .cta-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, #FFB3D9 0%, #FFB3D9 100%);
+            border: none;
+            padding: 14px 32px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .cta-button:active {
+            transform: scale(0.97);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FFB3D9 0%, #fff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .view-all {
+            font-size: 12px;
+            color: #FFB3D9;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .highlight-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .highlight-card:active {
+            transform: scale(0.99);
+            border-color: rgba(255, 179, 217, 0.3);
+        }
+
+        .three-dots-menu {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            color: #FFB3D9;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            z-index: 10;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+
+        .three-dots-menu:hover {
+            background: rgba(255, 179, 217, 0.2);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 45px;
+            right: 16px;
+            background: #1a1a1a;
+            border: 1px solid #FFB3D9;
+            border-radius: 12px;
+            padding: 8px 0;
+            min-width: 180px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            display: none;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 179, 217, 0.1);
+        }
+
+        .highlight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+
+        .highlight-badge {
+            background: linear-gradient(135deg, #FFB3D9 0%, #FFB3D9 100%);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+
+        .highlight-date {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            flex: 1;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .highlight-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .highlight-desc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .highlight-actions {
+            display: flex;
+            gap: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .action-button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-button:active {
+            color: #FFB3D9;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px;
+            position: relative;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FFB3D9 0%, #FFB3D9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        .message-info {
+            flex: 1;
+        }
+
+        .username {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .message-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 12px;
+        }
+
+        .message-reactions {
+            display: flex;
+            gap: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .reaction {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+        }
+
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 0 4px;
+        }
+
+        .collection-card {
+            background: rgba(255, 179, 217, 0.05);
+            border: 1px solid rgba(255, 179, 217, 0.15);
+            border-radius: 16px;
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .collection-card:active {
+            transform: scale(0.97);
+            border-color: #FFB3D9;
+            background: rgba(255, 179, 217, 0.1);
+        }
+
+        .collection-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+        }
+
+        .collection-name {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .collection-count {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .detail-screen {
+            background: #231F20;
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 70px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .detail-screen.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .detail-screen.out {
+            transform: translateX(-100%);
+        }
+
+        .detail-hero {
+            height: 50vh;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            position: relative;
+            margin-bottom: 24px;
+            margin-top: 0;
+        }
+
+        .detail-content {
+            padding: 0 20px 100px 20px;
+        }
+
+        .detail-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #FFB3D9 0%, #FFB3D9 100%);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .detail-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .detail-meta {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .detail-description {
+            font-size: 15px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 32px;
+        }
+
+        .detail-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(255, 179, 217, 0.05);
+            border: 1px solid rgba(255, 179, 217, 0.15);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 900;
+            color: #FFB3D9;
+            margin-bottom: 6px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .moment-upload-section {
+            background: linear-gradient(135deg, rgba(255, 20, 147, 0.15) 0%, rgba(255, 105, 180, 0.08) 100%);
+            border: 2px dashed rgba(255, 179, 217, 0.3);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .moment-upload-section:active {
+            transform: scale(0.98);
+            border-color: #FFB3D9;
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .upload-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .tabs {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #231F20;
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 max(env(safe-area-inset-bottom), 20px) 0;
+            border-top: 1px solid rgba(247, 181, 205, 0.2);
+            z-index: 1000;
+        }
+
+        .tab {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .tab.active {
+            color: #FFB3D9;
+        }
+
+        .tab-icon {
+            font-size: 24px;
+        }
+
+        .tab-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .separator {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 179, 217, 0.2) 50%, transparent 100%);
+            margin: 32px 0;
+        }
+
+        .apple-tv-cta {
+            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+            border: 1px solid rgba(255, 179, 217, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .apple-tv-icon {
+            font-size: 40px;
+        }
+
+        .apple-tv-text {
+            flex: 1;
+        }
+
+        .apple-tv-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .apple-tv-desc {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .sponsor-badge {
+            background: rgba(255, 179, 217, 0.1);
+            border: 1px solid rgba(255, 179, 217, 0.2);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="app-container">
+
+        <!-- SPLASH SCREEN -->
+        <div id="home" class="screen active">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 60px 40px; cursor: pointer;" onclick="navigateTo('menu')">
+                <div style="font-size: 72px; font-weight: 400; font-style: italic; letter-spacing: 4px; margin-bottom: 100px; line-height: 1.1; color: #8B7355; opacity: 0; animation: fadeIn 1.5s ease forwards;">
+                    Moments<br><span style="font-size: 52px;">of</span>
+                </div>
+                <div style="font-size: 13px; font-weight: 300; letter-spacing: 6px; text-transform: uppercase; opacity: 0; color: #8B7355; animation: fadeIn 1.5s ease 0.5s forwards;">
+                    tap to continue
+                </div>
+            </div>
+        </div>
+
+        <!-- MENU SCREEN -->
+        <div id="menu" class="screen">
+            <div style="padding: 80px 30px; max-width: 700px; margin: 0 auto;">
+                <div style="text-align: center; font-size: 42px; font-style: italic; margin-bottom: 70px; color: #8B7355; letter-spacing: 2px;">
+                    Choose your path
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px;">
+                    <div onclick="showQuote('wisdom')" style="background: rgba(212, 195, 180, 0.3); border: 2px solid rgba(139, 115, 85, 0.15); border-radius: 25px; padding: 70px 40px; text-align: center; cursor: pointer; transition: all 0.4s ease; backdrop-filter: blur(10px);">
+                        <div style="font-size: 52px; margin-bottom: 25px; opacity: 0.8;">🌿</div>
+                        <div style="font-size: 24px; font-style: italic; color: #8B7355; letter-spacing: 1px;">Wisdom</div>
+                    </div>
+                    <div onclick="showQuote('beauty')" style="background: rgba(212, 195, 180, 0.3); border: 2px solid rgba(139, 115, 85, 0.15); border-radius: 25px; padding: 70px 40px; text-align: center; cursor: pointer; transition: all 0.4s ease; backdrop-filter: blur(10px);">
+                        <div style="font-size: 52px; margin-bottom: 25px; opacity: 0.8;">🦋</div>
+                        <div style="font-size: 24px; font-style: italic; color: #8B7355; letter-spacing: 1px;">Beauty</div>
+                    </div>
+                    <div onclick="showQuote('reflection')" style="background: rgba(212, 195, 180, 0.3); border: 2px solid rgba(139, 115, 85, 0.15); border-radius: 25px; padding: 70px 40px; text-align: center; cursor: pointer; transition: all 0.4s ease; backdrop-filter: blur(10px);">
+                        <div style="font-size: 52px; margin-bottom: 25px; opacity: 0.8;">🌊</div>
+                        <div style="font-size: 24px; font-style: italic; color: #8B7355; letter-spacing: 1px;">Reflection</div>
+                    </div>
+                    <div onclick="showQuote('love')" style="background: rgba(212, 195, 180, 0.3); border: 2px solid rgba(139, 115, 85, 0.15); border-radius: 25px; padding: 70px 40px; text-align: center; cursor: pointer; transition: all 0.4s ease; backdrop-filter: blur(10px);">
+                        <div style="font-size: 52px; margin-bottom: 25px; opacity: 0.8;">🕊️</div>
+                        <div style="font-size: 24px; font-style: italic; color: #8B7355; letter-spacing: 1px;">Love</div>
+                    </div>
+                </div>
+                <div style="position: fixed; top: 45px; left: 30px; background: rgba(212, 195, 180, 0.4); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 24px; color: #8B7355; backdrop-filter: blur(5px);" onclick="navigateTo('home')">←</div>
+                <div style="position: fixed; top: 45px; right: 30px; background: rgba(212, 195, 180, 0.4); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 24px; color: #8B7355; backdrop-filter: blur(5px);" onclick="showSavedQuotes()">♡</div>
+            </div>
+        </div>
+
+        <!-- QUOTE VIEW SCREEN -->
+        <div id="quote" class="screen">
+            <div style="padding: 60px 30px; max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; justify-content: center; min-height: 100%;">
+                <div style="background: rgba(255, 255, 255, 0.5); border: 2px solid rgba(139, 115, 85, 0.1); border-radius: 35px; padding: 80px 50px; margin-bottom: 50px; backdrop-filter: blur(20px); box-shadow: 0 10px 40px rgba(139, 115, 85, 0.08);">
+                    <div id="quoteText" style="font-size: 28px; line-height: 2; font-style: italic; margin-bottom: 45px; color: #8B7355; text-align: center; font-weight: 400;"></div>
+                    <div id="quoteCategory" style="font-size: 11px; letter-spacing: 5px; text-transform: uppercase; opacity: 0.4; text-align: center; color: #8B7355;"></div>
+                </div>
+                <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="saveQuote()" style="background: linear-gradient(135deg, #C8B89D 0%, #A89580 100%); color: #fff; border: none; padding: 20px 50px; border-radius: 35px; font-family: Georgia, serif; font-size: 17px; cursor: pointer; letter-spacing: 2px; box-shadow: 0 5px 20px rgba(139, 115, 85, 0.2); transition: all 0.3s ease;">Save</button>
+                    <button onclick="shareQuote()" style="background: linear-gradient(135deg, #C8B89D 0%, #A89580 100%); color: #fff; border: none; padding: 20px 50px; border-radius: 35px; font-family: Georgia, serif; font-size: 17px; cursor: pointer; letter-spacing: 2px; box-shadow: 0 5px 20px rgba(139, 115, 85, 0.2); transition: all 0.3s ease;">Share</button>
+                    <button onclick="nextQuote()" style="background: linear-gradient(135deg, #C8B89D 0%, #A89580 100%); color: #fff; border: none; padding: 20px 50px; border-radius: 35px; font-family: Georgia, serif; font-size: 17px; cursor: pointer; letter-spacing: 2px; box-shadow: 0 5px 20px rgba(139, 115, 85, 0.2); transition: all 0.3s ease;">Next Quote</button>
+                </div>
+                <div style="position: fixed; top: 45px; left: 30px; background: rgba(212, 195, 180, 0.4); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 24px; color: #8B7355; backdrop-filter: blur(5px);" onclick="navigateTo('menu')">←</div>
+            </div>
+        </div>
+
+        <!-- SAVED QUOTES SCREEN -->
+        <div id="saved" class="screen">
+            <div style="padding: 60px 30px; max-width: 800px; margin: 0 auto;">
+                <div style="text-align: center; font-size: 42px; font-style: italic; margin-bottom: 60px; color: #8B7355; letter-spacing: 2px;">
+                    Saved Moments
+                </div>
+                <div id="savedQuotesList" style="display: flex; flex-direction: column; gap: 25px; padding-bottom: 60px;">
+                    <!-- Saved quotes will be dynamically inserted here -->
+                </div>
+                <div style="position: fixed; top: 45px; left: 30px; background: rgba(212, 195, 180, 0.4); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 24px; color: #8B7355; backdrop-filter: blur(5px);" onclick="navigateTo('menu')">←</div>
+            </div>
+        </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentScreen = 'home';
+        let screenHistory = ['home'];
+
+        function navigateTo(screenId) {
+            if (currentScreen === screenId) {
+                return;
+            }
+
+            const current = document.getElementById(currentScreen);
+            const next = document.getElementById(screenId);
+
+            if (!next) {
+                return;
+            }
+
+            current.classList.remove('active');
+            current.classList.add('out');
+
+            next.classList.remove('out');
+            next.classList.add('active');
+
+            // Push current screen to history stack
+            screenHistory.push(currentScreen);
+            currentScreen = screenId;
+
+            next.scrollTop = 0;
+
+            setTimeout(() => current.classList.remove('out'), 300);
+        }
+
+        function goBack() {
+            // Pop the last screen from history (which is current screen)
+            if (screenHistory.length > 0) {
+                const previousScreen = screenHistory.pop();
+                
+                const current = document.getElementById(currentScreen);
+                const previous = document.getElementById(previousScreen);
+                
+                if (previous) {
+                    current.classList.remove('active');
+                    current.classList.add('out');
+                    
+                    previous.classList.remove('out');
+                    previous.classList.add('active');
+                    
+                    currentScreen = previousScreen;
+                    previous.scrollTop = 0;
+                    
+                    setTimeout(() => current.classList.remove('out'), 300);
+                }
+            } else {
+                // If no history, go to home
+                screenHistory = [];
+                navigateTo('home');
+            }
+        }
+
+        function navigateToHome() {
+            // Clear history and go directly to home
+            screenHistory = [];
+            
+            const current = document.getElementById(currentScreen);
+            const home = document.getElementById('home');
+            
+            if (currentScreen !== 'home') {
+                current.classList.remove('active');
+                current.classList.add('out');
+                
+                home.classList.remove('out');
+                home.classList.add('active');
+                
+                currentScreen = 'home';
+                home.scrollTop = 0;
+                
+                setTimeout(() => current.classList.remove('out'), 300);
+                
+                // Update tab selection
+                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelector('.tab:first-child').classList.add('active');
+            }
+        }
+
+        function setActiveTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            screenHistory = [];
+            navigateTo(tabName);
+        }
+
+        // Dropdown menu functionality
+        function toggleDropdown(event, dropdownId) {
+            event.stopPropagation();
+            const dropdown = document.getElementById(dropdownId);
+            const allDropdowns = document.querySelectorAll('.dropdown-menu');
+            
+            // Close all other dropdowns
+            allDropdowns.forEach(d => {
+                if (d.id !== dropdownId) {
+                    d.classList.remove('show');
+                }
+            });
+            
+            // Toggle current dropdown
+            dropdown.classList.toggle('show');
+        }
+
+        function handleShare(event, title) {
+            event.stopPropagation();
+            alert('Share: ' + title);
+            // Close dropdown
+            document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('show'));
+        }
+
+        function handleSave(event, title) {
+            event.stopPropagation();
+            alert('Saved: ' + title);
+            // Close dropdown
+            document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('show'));
+        }
+
+        function handleCopyLink(event, title) {
+            event.stopPropagation();
+            alert('Link copied: ' + title);
+            // Close dropdown
+            document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('show'));
+        }
+
+        function handleReport(event, title) {
+            event.stopPropagation();
+            alert('Report: ' + title);
+            // Close dropdown
+            document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('show'));
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('show'));
+        });
+    </script>
+
+    <!-- Inline PWA Service Worker Registration -->
+    <script>
+        // Convert inline manifest to blob and create data URL
+        const manifestData = document.getElementById('pwa-manifest').textContent;
+        const manifestBlob = new Blob([manifestData], { type: 'application/json' });
+        const manifestURL = URL.createObjectURL(manifestBlob);
+
+        // Create and inject manifest link
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = manifestURL;
+        document.head.appendChild(manifestLink);
+
+        // Inline Service Worker code
+        const serviceWorkerCode = `
+            const CACHE_NAME = 'herons-v1';
+            const urlsToCache = [
+                './',
+                'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap'
+            ];
+
+            // Install event
+            self.addEventListener('install', (event) => {
+                console.log('[Service Worker] Installing HERONS PWA...');
+                event.waitUntil(
+                    caches.open(CACHE_NAME)
+                        .then((cache) => {
+                            console.log('[Service Worker] Caching app shell');
+                            return cache.addAll(urlsToCache);
+                        })
+                        .then(() => self.skipWaiting())
+                        .catch((error) => console.error('[Service Worker] Install failed:', error))
+                );
+            });
+
+            // Activate event
+            self.addEventListener('activate', (event) => {
+                console.log('[Service Worker] Activating...');
+                event.waitUntil(
+                    caches.keys()
+                        .then((cacheNames) => {
+                            return Promise.all(
+                                cacheNames.map((cacheName) => {
+                                    if (cacheName !== CACHE_NAME) {
+                                        console.log('[Service Worker] Deleting old cache:', cacheName);
+                                        return caches.delete(cacheName);
+                                    }
+                                })
+                            );
+                        })
+                        .then(() => self.clients.claim())
+                );
+            });
+
+            // Fetch event - Cache-first strategy
+            self.addEventListener('fetch', (event) => {
+                event.respondWith(
+                    caches.match(event.request)
+                        .then((cachedResponse) => {
+                            if (cachedResponse) {
+                                return cachedResponse;
+                            }
+                            return fetch(event.request)
+                                .then((response) => {
+                                    if (!response || response.status !== 200 || response.type === 'error') {
+                                        return response;
+                                    }
+                                    const responseToCache = response.clone();
+                                    caches.open(CACHE_NAME)
+                                        .then((cache) => {
+                                            cache.put(event.request, responseToCache);
+                                        });
+                                    return response;
+                                })
+                                .catch(() => {
+                                    return caches.match('./');
+                                });
+                        })
+                );
+            });
+
+            console.log('[Service Worker] HERONS PWA - Ready');
+        `;
+
+        // Register inline service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Create blob from service worker code
+                const swBlob = new Blob([serviceWorkerCode], { type: 'application/javascript' });
+                const swURL = URL.createObjectURL(swBlob);
+
+                // Register the service worker
+                navigator.serviceWorker.register(swURL)
+                    .then(registration => {
+                        console.log('✅ HERONS PWA Service Worker registered:', registration.scope);
+
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('🔄 New version available! Reload to update.');
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.error('❌ Service Worker registration failed:', error);
+                    });
+            });
+
+            // Listen for service worker messages
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                console.log('📨 Message from Service Worker:', event.data);
+            });
+        } else {
+            console.log('⚠️ Service Workers not supported in this browser');
+        }
+
+        // Quote collections - Poetic quotes in multiple languages
+        const quotes = {
+            wisdom: {
+                en: [
+                "Sometimes, the way forward reveals itself only when we slow down enough to hear silence gathering beneath our fears",
+                "What you seek is seeking you, but first you must become still enough to let it find you in the darkness",
+                "The wound is the place where the light enters. Keep it open. Let the radiance through, even when it burns",
+                "Between stimulus and response lies a space. In that space dwells our power to choose. There, freedom lives",
+                "The obstacle is not blocking the path. The obstacle is the path itself, teaching what we most need to learn",
+                "We are not going in circles. We are going upwards. The path is a spiral—we pass the same lessons, higher each time",
+                "What stands in the way becomes the way. Every wall is also a door, waiting for you to find the right key",
+                "The cave you fear to enter holds the treasure you seek. Step forward into the dark—it's the only path to light",
+                "Suffering is not the absence of joy. It is forgetting that joy and sorrow are two names for the same teacher",
+                "To know yourself, you must first become a stranger to the person you thought you were yesterday morning"
+                ],
+                it: [
+                    "A volte, la via avanti si rivela solo quando rallentiamo abbastanza da sentire il silenzio radunarsi sotto le nostre paure",
+                    "Ciò che cerchi ti sta cercando, ma prima devi diventare abbastanza immobile da lasciare che ti trovi nell'oscurità",
+                    "La ferita è il luogo dove entra la luce. Tienila aperta. Lascia passare lo splendore, anche quando brucia",
+                    "Tra stimolo e risposta giace uno spazio. In quello spazio dimora il nostro potere di scegliere. Lì vive la libertà",
+                    "L'ostacolo non sta bloccando il sentiero. L'ostacolo è il sentiero stesso, che insegna ciò che più dobbiamo imparare",
+                    "Non stiamo andando in cerchio. Stiamo salendo. Il sentiero è una spirale—passiamo le stesse lezioni, più in alto ogni volta",
+                    "Ciò che si frappone diventa la via. Ogni muro è anche una porta, in attesa che tu trovi la chiave giusta",
+                    "La caverna che temi di entrare custodisce il tesoro che cerchi. Fai un passo avanti nel buio—è l'unica via verso la luce",
+                    "La sofferenza non è l'assenza di gioia. È dimenticare che gioia e dolore sono due nomi per lo stesso maestro",
+                    "Per conoscere te stesso, devi prima diventare un estraneo per la persona che pensavi di essere ieri mattina"
+                ],
+                es: [
+                    "A veces, el camino hacia adelante se revela solo cuando nos detenemos lo suficiente para escuchar el silencio reunirse bajo nuestros miedos",
+                    "Lo que buscas te está buscando, pero primero debes volverte lo suficientemente quieto para que te encuentre en la oscuridad",
+                    "La herida es el lugar donde entra la luz. Mantenla abierta. Deja pasar el resplandor, incluso cuando quema",
+                    "Entre estímulo y respuesta yace un espacio. En ese espacio mora nuestro poder de elegir. Allí vive la libertad",
+                    "El obstáculo no está bloqueando el camino. El obstáculo es el camino mismo, enseñando lo que más necesitamos aprender",
+                    "No estamos dando vueltas en círculos. Estamos subiendo. El camino es una espiral—pasamos las mismas lecciones, más alto cada vez",
+                    "Lo que se interpone se convierte en el camino. Cada muro es también una puerta, esperando que encuentres la llave correcta",
+                    "La cueva que temes entrar guarda el tesoro que buscas. Da un paso hacia la oscuridad—es el único camino hacia la luz",
+                    "El sufrimiento no es la ausencia de alegría. Es olvidar que alegría y dolor son dos nombres para el mismo maestro",
+                    "Para conocerte a ti mismo, primero debes convertirte en un extraño para la persona que pensabas que eras ayer por la mañana"
+                ],
+                fr: [
+                    "Parfois, le chemin vers l'avant se révèle seulement quand nous ralentissons assez pour entendre le silence se rassembler sous nos peurs",
+                    "Ce que tu cherches te cherche, mais tu dois d'abord devenir assez immobile pour le laisser te trouver dans l'obscurité",
+                    "La blessure est l'endroit où entre la lumière. Garde-la ouverte. Laisse passer la radiance, même quand elle brûle",
+                    "Entre stimulus et réponse réside un espace. Dans cet espace demeure notre pouvoir de choisir. Là vit la liberté",
+                    "L'obstacle ne bloque pas le chemin. L'obstacle est le chemin lui-même, enseignant ce que nous devons le plus apprendre",
+                    "Nous ne tournons pas en rond. Nous montons. Le chemin est une spirale—nous passons les mêmes leçons, plus haut chaque fois",
+                    "Ce qui se dresse en travers devient le chemin. Chaque mur est aussi une porte, attendant que tu trouves la bonne clé",
+                    "La caverne que tu crains d'entrer garde le trésor que tu cherches. Fais un pas dans le noir—c'est le seul chemin vers la lumière",
+                    "La souffrance n'est pas l'absence de joie. C'est oublier que joie et douleur sont deux noms pour le même maître",
+                    "Pour te connaître toi-même, tu dois d'abord devenir un étranger à la personne que tu pensais être hier matin"
+                ]
+            },
+            beauty: {
+                en: [
+                "He runs through the meadow not chasing birds, but chasing laughter itself. When the wind rises, he stops. Nose lifted, eyes closed",
+                "The morning light doesn't announce its arrival. It simply comes, turning everything it touches into gold without asking anyone's permission",
+                "Watch how the river knows its path without thinking, how it finds its way around every stone with ancient patience",
+                "A single bird sang in the darkness before dawn. It sang not because there was light, but to call the light home",
+                "The trees do not compete to see who can grow tallest. They simply reach toward the sun, each in their own perfect way",
+                "Notice how the butterfly pauses on the flower—not to possess it, but to honor it with nothing more than presence",
+                "Snow falls without destination, lands without judgment, melts without regret. This is the poetry we should learn from winter",
+                "The ocean doesn't try to hold its waves close. It releases each one, knowing another will always return to shore",
+                "Sunlight through autumn leaves teaches what we cannot learn from any book: that impermanence itself is a kind of perfection",
+                "The spider's web glistens with morning dew—a palace built in darkness, revealed only when light decides to visit"
+                ],
+                it: [
+                    "Corre nel prato non inseguendo uccelli, ma inseguendo la risata stessa. Quando il vento si alza, si ferma. Naso sollevato, occhi chiusi",
+                    "La luce del mattino non annuncia il suo arrivo. Semplicemente viene, trasformando tutto ciò che tocca in oro senza chiedere il permesso di nessuno",
+                    "Guarda come il fiume conosce il suo percorso senza pensare, come trova la sua strada intorno a ogni pietra con pazienza antica",
+                    "Un singolo uccello cantava nell'oscurità prima dell'alba. Cantava non perché ci fosse luce, ma per chiamare la luce a casa",
+                    "Gli alberi non competono per vedere chi può crescere più alto. Semplicemente si allungano verso il sole, ognuno nel proprio modo perfetto",
+                    "Nota come la farfalla si ferma sul fiore—non per possederlo, ma per onorarlo con niente più che presenza",
+                    "La neve cade senza destinazione, atterra senza giudizio, si scioglie senza rimpianto. Questa è la poesia che dovremmo imparare dall'inverno",
+                    "L'oceano non cerca di tenere vicine le sue onde. Rilascia ognuna, sapendo che un'altra tornerà sempre a riva",
+                    "La luce del sole attraverso le foglie autunnali insegna ciò che non possiamo imparare da nessun libro: che l'impermanenza stessa è una sorta di perfezione",
+                    "La tela del ragno brilla di rugiada mattutina—un palazzo costruito nell'oscurità, rivelato solo quando la luce decide di visitare"
+                ],
+                es: [
+                    "Corre por el prado no persiguiendo pájaros, sino persiguiendo la risa misma. Cuando el viento se levanta, se detiene. Nariz levantada, ojos cerrados",
+                    "La luz de la mañana no anuncia su llegada. Simplemente viene, convirtiendo todo lo que toca en oro sin pedir permiso a nadie",
+                    "Observa cómo el río conoce su camino sin pensar, cómo encuentra su paso alrededor de cada piedra con paciencia antigua",
+                    "Un solo pájaro cantaba en la oscuridad antes del amanecer. Cantaba no porque hubiera luz, sino para llamar a la luz a casa",
+                    "Los árboles no compiten para ver quién puede crecer más alto. Simplemente se extienden hacia el sol, cada uno en su propia manera perfecta",
+                    "Observa cómo la mariposa se detiene en la flor—no para poseerla, sino para honrarla con nada más que presencia",
+                    "La nieve cae sin destino, aterriza sin juicio, se derrite sin arrepentimiento. Esta es la poesía que deberíamos aprender del invierno",
+                    "El océano no intenta mantener sus olas cerca. Libera cada una, sabiendo que otra siempre volverá a la orilla",
+                    "La luz del sol a través de las hojas de otoño enseña lo que no podemos aprender de ningún libro: que la impermanencia misma es una especie de perfección",
+                    "La telaraña del araña brilla con rocío de la mañana—un palacio construido en la oscuridad, revelado solo cuando la luz decide visitar"
+                ],
+                fr: [
+                    "Il court dans la prairie ne chassant pas les oiseaux, mais chassant le rire lui-même. Quand le vent se lève, il s'arrête. Nez levé, yeux fermés",
+                    "La lumière du matin n'annonce pas son arrivée. Elle vient simplement, transformant tout ce qu'elle touche en or sans demander la permission de personne",
+                    "Regarde comment la rivière connaît son chemin sans penser, comment elle trouve son passage autour de chaque pierre avec patience ancienne",
+                    "Un seul oiseau chantait dans l'obscurité avant l'aube. Il chantait non pas parce qu'il y avait de la lumière, mais pour appeler la lumière à la maison",
+                    "Les arbres ne rivalisent pas pour voir qui peut grandir le plus haut. Ils s'étendent simplement vers le soleil, chacun à sa manière parfaite",
+                    "Remarque comment le papillon se pose sur la fleur—non pas pour la posséder, mais pour l'honorer avec rien de plus que la présence",
+                    "La neige tombe sans destination, atterrit sans jugement, fond sans regret. C'est la poésie que nous devrions apprendre de l'hiver",
+                    "L'océan n'essaie pas de garder ses vagues près. Il libère chacune, sachant qu'une autre reviendra toujours au rivage",
+                    "La lumière du soleil à travers les feuilles d'automne enseigne ce que nous ne pouvons apprendre d'aucun livre: que l'impermanence elle-même est une sorte de perfection",
+                    "La toile de l'araignée brille de rosée matinale—un palais construit dans l'obscurité, révélé seulement quand la lumière décide de visiter"
+                ]
+            },
+            reflection: {
+                en: [
+                "The wind paused to listen—but was it hearing the trees, or only the silence it had carried from somewhere far away?",
+                "You are not the voice inside your head. You are the one who stands behind it, quietly noticing it speak",
+                "The question itself is sometimes the answer, patiently waiting for us to stop searching and simply see what's already here",
+                "Between the inhale and exhale exists a stillness that contains everything and nothing. Try to live there, just for a moment",
+                "We think we are the drop falling into the ocean. We forget we are also the ocean, learning to be a drop",
+                "The mind is like water. When turbulent, it cannot reflect anything clearly. When still, it shows the whole sky at once",
+                "What if the purpose of life is not to find yourself, but to create yourself, again and again, until the end?",
+                "The present moment is the only time anything has ever actually happened. The rest is memory or imagination, nothing more",
+                "Meditation is not about stopping thoughts. It's about stopping the habit of believing them as if they were absolute truth",
+                "The paradox: you must let go completely of who you are to become who you might possibly be tomorrow"
+                ],
+                it: [
+                    "Il vento si fermò ad ascoltare—ma stava sentendo gli alberi, o solo il silenzio che aveva portato da qualche luogo lontano?",
+                    "Non sei la voce dentro la tua testa. Sei quello che sta dietro di essa, notando silenziosamente mentre parla",
+                    "La domanda stessa è talvolta la risposta, in paziente attesa che smettiamo di cercare e semplicemente vediamo ciò che è già qui",
+                    "Tra l'inspirazione e l'espirazione esiste una quiete che contiene tutto e niente. Prova a vivere lì, solo per un momento",
+                    "Pensiamo di essere la goccia che cade nell'oceano. Dimentichiamo che siamo anche l'oceano, che impara ad essere una goccia",
+                    "La mente è come l'acqua. Quando è turbata, non può riflettere nulla chiaramente. Quando è ferma, mostra tutto il cielo in una volta",
+                    "E se lo scopo della vita non fosse trovarti, ma crearti, ancora e ancora, fino alla fine?",
+                    "Il momento presente è l'unico tempo in cui qualcosa sia mai realmente accaduto. Il resto è memoria o immaginazione, niente di più",
+                    "La meditazione non riguarda il fermare i pensieri. Riguarda il fermare l'abitudine di crederli come se fossero verità assoluta",
+                    "Il paradosso: devi lasciare andare completamente chi sei per diventare chi potresti possibilmente essere domani"
+                ],
+                es: [
+                    "El viento se detuvo para escuchar—pero ¿estaba oyendo los árboles, o solo el silencio que había llevado desde algún lugar lejano?",
+                    "No eres la voz dentro de tu cabeza. Eres el que está detrás de ella, notándola silenciosamente mientras habla",
+                    "La pregunta misma es a veces la respuesta, esperando pacientemente que dejemos de buscar y simplemente veamos lo que ya está aquí",
+                    "Entre la inhalación y la exhalación existe una quietud que contiene todo y nada. Intenta vivir ahí, solo por un momento",
+                    "Pensamos que somos la gota cayendo en el océano. Olvidamos que también somos el océano, aprendiendo a ser una gota",
+                    "La mente es como el agua. Cuando está turbulenta, no puede reflejar nada claramente. Cuando está quieta, muestra todo el cielo a la vez",
+                    "¿Y si el propósito de la vida no es encontrarte, sino crearte, una y otra vez, hasta el final?",
+                    "El momento presente es el único tiempo en que algo ha sucedido realmente. El resto es memoria o imaginación, nada más",
+                    "La meditación no se trata de detener los pensamientos. Se trata de detener el hábito de creerlos como si fueran verdad absoluta",
+                    "La paradoja: debes soltar completamente quién eres para convertirte en quien posiblemente podrías ser mañana"
+                ],
+                fr: [
+                    "Le vent s'est arrêté pour écouter—mais entendait-il les arbres, ou seulement le silence qu'il avait porté de quelque endroit lointain?",
+                    "Tu n'es pas la voix dans ta tête. Tu es celui qui se tient derrière elle, la remarquant silencieusement parler",
+                    "La question elle-même est parfois la réponse, attendant patiemment que nous cessions de chercher et voyions simplement ce qui est déjà ici",
+                    "Entre l'inspiration et l'expiration existe un calme qui contient tout et rien. Essaie d'y vivre, juste pour un moment",
+                    "Nous pensons que nous sommes la goutte tombant dans l'océan. Nous oublions que nous sommes aussi l'océan, apprenant à être une goutte",
+                    "L'esprit est comme l'eau. Quand il est turbulent, il ne peut rien refléter clairement. Quand il est calme, il montre tout le ciel à la fois",
+                    "Et si le but de la vie n'était pas de te trouver, mais de te créer, encore et encore, jusqu'à la fin?",
+                    "Le moment présent est le seul temps où quelque chose s'est réellement passé. Le reste est mémoire ou imagination, rien de plus",
+                    "La méditation ne consiste pas à arrêter les pensées. Il s'agit d'arrêter l'habitude de les croire comme si elles étaient la vérité absolue",
+                    "Le paradoxe: tu dois complètement lâcher qui tu es pour devenir qui tu pourrais possiblement être demain"
+                ]
+            },
+            love: {
+                en: [
+                "At the heart of every fulcrum, there is love. Love and healing are one and the same—different words, same river",
+                "Love is not something you fall into like a hole. It is something you rise toward, choosing it daily against all odds",
+                "The opposite of love is not hate—it is indifference. Choose to care, even when it hurts more than you can bear",
+                "To love someone is to see a sacred mystery in them that they cannot yet see clearly in themselves, and to wait",
+                "Love says: I want you to be happy, even if that happiness exists somewhere without me nearby, and that's okay",
+                "The heart breaks not because it is weak and fragile. It breaks because it is finally strong enough to feel absolutely everything",
+                "Forgiveness is not about forgetting what happened. It is about remembering that everyone is doing their best from where they stand today",
+                "We are all just walking each other home, slowly. Sometimes the path is smooth. Sometimes we must carry one another through darkness",
+                "Love is the only force capable of transforming an enemy into a friend, a wound into wisdom, bitterness into grace",
+                "The deepest act of love is allowing someone to be exactly who they are, without any need to fix or change them"
+                ],
+                it: [
+                    "Al cuore di ogni fulcro, c'è amore. Amore e guarigione sono la stessa cosa—parole diverse, stesso fiume",
+                    "L'amore non è qualcosa in cui cadi come in un buco. È qualcosa verso cui ti sollevi, scegliendolo ogni giorno contro ogni probabilità",
+                    "L'opposto dell'amore non è l'odio—è l'indifferenza. Scegli di prenderti cura, anche quando fa più male di quanto puoi sopportare",
+                    "Amare qualcuno è vedere in loro un mistero sacro che non possono ancora vedere chiaramente in se stessi, e aspettare",
+                    "L'amore dice: voglio che tu sia felice, anche se quella felicità esiste da qualche parte senza di me vicino, e va bene così",
+                    "Il cuore si spezza non perché è debole e fragile. Si spezza perché è finalmente abbastanza forte da sentire assolutamente tutto",
+                    "Il perdono non riguarda il dimenticare ciò che è successo. Riguarda il ricordare che tutti stanno facendo del loro meglio da dove si trovano oggi",
+                    "Stiamo tutti solo accompagnandoci a casa, lentamente. A volte il sentiero è liscio. A volte dobbiamo portarci a vicenda attraverso l'oscurità",
+                    "L'amore è l'unica forza capace di trasformare un nemico in un amico, una ferita in saggezza, l'amarezza in grazia",
+                    "L'atto più profondo d'amore è permettere a qualcuno di essere esattamente chi è, senza alcun bisogno di aggiustarlo o cambiarlo"
+                ],
+                es: [
+                    "En el corazón de cada fulcro, hay amor. Amor y sanación son uno y lo mismo—palabras diferentes, mismo río",
+                    "El amor no es algo en lo que caes como en un agujero. Es algo hacia lo que te elevas, eligiéndolo diariamente contra todas las probabilidades",
+                    "Lo opuesto al amor no es el odio—es la indiferencia. Elige cuidar, incluso cuando duele más de lo que puedes soportar",
+                    "Amar a alguien es ver un misterio sagrado en ellos que aún no pueden ver claramente en sí mismos, y esperar",
+                    "El amor dice: quiero que seas feliz, incluso si esa felicidad existe en algún lugar sin mí cerca, y eso está bien",
+                    "El corazón se rompe no porque es débil y frágil. Se rompe porque finalmente es lo suficientemente fuerte para sentir absolutamente todo",
+                    "El perdón no se trata de olvidar lo que sucedió. Se trata de recordar que todos están haciendo lo mejor desde donde están hoy",
+                    "Todos solo nos estamos acompañando a casa, lentamente. A veces el camino es suave. A veces debemos llevarnos unos a otros a través de la oscuridad",
+                    "El amor es la única fuerza capaz de transformar un enemigo en amigo, una herida en sabiduría, la amargura en gracia",
+                    "El acto más profundo de amor es permitir que alguien sea exactamente quien es, sin ninguna necesidad de arreglarlo o cambiarlo"
+                ],
+                fr: [
+                    "Au cœur de chaque pivot, il y a l'amour. L'amour et la guérison sont une seule et même chose—mots différents, même rivière",
+                    "L'amour n'est pas quelque chose dans lequel on tombe comme dans un trou. C'est quelque chose vers lequel on s'élève, en le choisissant chaque jour contre toute attente",
+                    "Le contraire de l'amour n'est pas la haine—c'est l'indifférence. Choisis de te soucier, même quand ça fait plus mal que tu ne peux supporter",
+                    "Aimer quelqu'un, c'est voir en lui un mystère sacré qu'il ne peut pas encore voir clairement en lui-même, et attendre",
+                    "L'amour dit: je veux que tu sois heureux, même si ce bonheur existe quelque part sans moi à proximité, et c'est bien ainsi",
+                    "Le cœur se brise non pas parce qu'il est faible et fragile. Il se brise parce qu'il est enfin assez fort pour ressentir absolument tout",
+                    "Le pardon ne consiste pas à oublier ce qui s'est passé. Il s'agit de se rappeler que tout le monde fait de son mieux d'où il se trouve aujourd'hui",
+                    "Nous nous ramenons tous simplement à la maison, lentement. Parfois le chemin est lisse. Parfois nous devons nous porter les uns les autres à travers l'obscurité",
+                    "L'amour est la seule force capable de transformer un ennemi en ami, une blessure en sagesse, l'amertume en grâce",
+                    "L'acte d'amour le plus profond est de permettre à quelqu'un d'être exactement qui il est, sans aucun besoin de le réparer ou de le changer"
+                ]
+            }
+        };
+
+        let currentCategory = '';
+        let currentQuoteIndex = 0;
+        let currentLanguage = 'en';
+        const availableLanguages = ['en', 'it', 'es', 'fr'];
+
+        // Get random language
+        function getRandomLanguage() {
+            return availableLanguages[Math.floor(Math.random() * availableLanguages.length)];
+        }
+
+        // Get random quote index for current category and language
+        function getRandomQuoteIndex() {
+            const categoryQuotes = quotes[currentCategory][currentLanguage];
+            return Math.floor(Math.random() * categoryQuotes.length);
+        }
+
+        function showQuote(category) {
+            currentCategory = category;
+            currentLanguage = getRandomLanguage(); // Random language
+            currentQuoteIndex = getRandomQuoteIndex(); // Random quote
+            displayQuote();
+            navigateTo('quote');
+        }
+
+        function displayQuote() {
+            const categoryQuotes = quotes[currentCategory][currentLanguage];
+            const quote = categoryQuotes[currentQuoteIndex];
+
+            const quoteText = document.getElementById('quoteText');
+            const quoteCategory = document.getElementById('quoteCategory');
+
+            // Fade out
+            quoteText.style.opacity = '0';
+            quoteCategory.style.opacity = '0';
+
+            setTimeout(() => {
+                quoteText.textContent = quote;
+                quoteCategory.textContent = currentCategory;
+
+                // Fade in
+                quoteText.style.transition = 'opacity 0.8s ease';
+                quoteCategory.style.transition = 'opacity 0.8s ease';
+                quoteText.style.opacity = '1';
+                quoteCategory.style.opacity = '1';
+            }, 400);
+        }
+
+        function nextQuote() {
+            currentLanguage = getRandomLanguage(); // Random language each time
+            currentQuoteIndex = getRandomQuoteIndex(); // Random quote each time
+            displayQuote();
+        }
+
+        // Save quote functionality
+        function saveQuote() {
+            const categoryQuotes = quotes[currentCategory][currentLanguage];
+            const quote = categoryQuotes[currentQuoteIndex];
+
+            // Get existing saved quotes from localStorage
+            let savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+
+            // Check if quote already saved
+            const alreadySaved = savedQuotes.some(saved =>
+                saved.text === quote && saved.category === currentCategory
+            );
+
+            if (!alreadySaved) {
+                savedQuotes.push({
+                    text: quote,
+                    category: currentCategory,
+                    language: currentLanguage,
+                    timestamp: Date.now()
+                });
+                localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
+                alert('Quote saved!');
+            } else {
+                alert('Quote already saved!');
+            }
+        }
+
+        // Share quote functionality
+        async function shareQuote() {
+            const categoryQuotes = quotes[currentCategory][currentLanguage];
+            const quote = categoryQuotes[currentQuoteIndex];
+            const shareText = `"${quote}"\n\n— Moments of ${currentCategory}`;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Moments of',
+                        text: shareText
+                    });
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        copyToClipboard(shareText);
+                    }
+                }
+            } else {
+                copyToClipboard(shareText);
+            }
+        }
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('Quote copied to clipboard!');
+                }).catch(() => {
+                    alert('Failed to copy quote');
+                });
+            } else {
+                // Fallback for older browsers
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    alert('Quote copied to clipboard!');
+                } catch (err) {
+                    alert('Failed to copy quote');
+                }
+                document.body.removeChild(textarea);
+            }
+        }
+
+        // Show saved quotes screen
+        function showSavedQuotes() {
+            const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+            const savedQuotesList = document.getElementById('savedQuotesList');
+
+            if (savedQuotes.length === 0) {
+                savedQuotesList.innerHTML = `
+                    <div style="text-align: center; padding: 80px 40px; opacity: 0.6; color: #8B7355;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">✨</div>
+                        <div style="font-size: 18px; font-style: italic; line-height: 1.7;">No moments saved yet.<br>Find one that speaks to you.</div>
+                    </div>
+                `;
+            } else {
+                savedQuotesList.innerHTML = savedQuotes.map((saved, index) => `
+                    <div style="background: rgba(255, 255, 255, 0.5); border: 2px solid rgba(139, 115, 85, 0.1); border-radius: 25px; padding: 40px; backdrop-filter: blur(20px); box-shadow: 0 5px 20px rgba(139, 115, 85, 0.08); position: relative;">
+                        <div style="font-size: 22px; line-height: 1.8; font-style: italic; margin-bottom: 30px; color: #8B7355; text-align: center;">"${saved.text}"</div>
+                        <div style="font-size: 11px; letter-spacing: 4px; text-transform: uppercase; opacity: 0.4; text-align: center; color: #8B7355; margin-bottom: 20px;">${saved.category}</div>
+                        <div style="display: flex; gap: 15px; justify-content: center;">
+                            <button onclick="shareSavedQuote(${index})" style="background: linear-gradient(135deg, #C8B89D 0%, #A89580 100%); color: #fff; border: none; padding: 12px 30px; border-radius: 25px; font-family: Georgia, serif; font-size: 14px; cursor: pointer; letter-spacing: 1px; box-shadow: 0 3px 15px rgba(139, 115, 85, 0.2);">Share</button>
+                            <button onclick="deleteSavedQuote(${index})" style="background: linear-gradient(135deg, #C8B89D 0%, #A89580 100%); color: #fff; border: none; padding: 12px 30px; border-radius: 25px; font-family: Georgia, serif; font-size: 14px; cursor: pointer; letter-spacing: 1px; box-shadow: 0 3px 15px rgba(139, 115, 85, 0.2);">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            navigateTo('saved');
+        }
+
+        // Delete a saved quote
+        function deleteSavedQuote(index) {
+            if (confirm('Are you sure you want to delete this saved quote?')) {
+                let savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+                savedQuotes.splice(index, 1);
+                localStorage.setItem('savedQuotes', JSON.stringify(savedQuotes));
+                showSavedQuotes(); // Refresh the list
+            }
+        }
+
+        // Share a saved quote
+        async function shareSavedQuote(index) {
+            const savedQuotes = JSON.parse(localStorage.getItem('savedQuotes') || '[]');
+            const saved = savedQuotes[index];
+            const shareText = `"${saved.text}"\n\n— Moments of ${saved.category}`;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Moments of',
+                        text: shareText
+                    });
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        copyToClipboard(shareText);
+                    }
+                }
+            } else {
+                copyToClipboard(shareText);
+            }
+        }
+    </script>
+            </div>
+        </div>
+</body>
+</html>
